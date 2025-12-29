@@ -7,7 +7,7 @@ from .utils import Datum, DatasetBase, read_json, write_json
 template = ['a photo of {}.']
 
 
-class StreetCleanSample(DatasetBase):
+class Street50(DatasetBase):
     """
     Folder-based dataset:
 

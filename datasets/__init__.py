@@ -9,6 +9,7 @@ from .food101 import Food101
 from .oxford_flowers import OxfordFlowers
 from .stanford_cars import StanfordCars
 from .imagenet import ImageNet
+from .street_50 import Street50
 
 
 dataset_list = {
@@ -22,6 +23,7 @@ dataset_list = {
                 "food101": Food101,
                 "oxford_flowers": OxfordFlowers,
                 "stanford_cars": StanfordCars,
+                "street_50": Street50,
                 "imagenet": ImageNet,
                 }
 

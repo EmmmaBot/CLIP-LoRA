@@ -1,137 +1,113 @@
-# Low-Rank Few-Shot Adaptation of Vision-Language Models [CVPRW 2024]
+This repository is a fork of the original implementation of the paper [*Low-Rank Few-Shot Adaptation of Vision-Language Models*](https://arxiv.org/abs/2405.18541), as presented at CVPRW 2024.
 
-The official implementation of [*Low-Rank Few-Shot Adaptation of Vision-Language Models*](https://arxiv.org/abs/2405.18541).
+The paper introduces efficient fine-tuning approaches for vision-language models (e.g., CLIP) using Low-Rank Adaptation (LoRA). For more details, refer to the paper linked above.
 
-**Authors**:
-[Maxime Zanella](https://scholar.google.com/citations?user=FIoE9YIAAAAJ&hl=fr&oi=ao),
-[Ismail Ben Ayed](https://scholar.google.com/citations?user=29vyUccAAAAJ&hl=fr&oi=ao).
+---
 
-We present CLIP-LoRA, an easy-to-use few-shot method for Vision-Language Models with fixed hyperparameters for every task and every number of shots. This repository also aims at facilitating the usage of Low-Rank adapters (LoRA) in Vision-Language Models like CLIP.
+### Note on Updates
 
-<p align="center">
-  <img src="peft2.jpg" alt="PEFT" width="300" height="250">
-  <br>
-  <em>Figure 1: Low-Rank Adaptation (LoRA) is easy to use and does not create any additional inference latency.</em>
-</p>
+This README and codebase have been modified from the original repository to reflect custom updates and enhancements over time. Any new features or improvements added here are based on the original implementation. 
 
-Here is how to run the experiments:
+Feel free to explore this forked repository and track changes in the commit history.
 
-1. [Installation](#installation) 
-2. [Usage](#how-to-execute-CLIP-LoRA) 
+## Features
 
-A quick guide on how LoRA is implemented in this repository:
+- **Available Models:** Supports variants of the CLIP model such as `RN50`, `RN101`, `ViT-B/32`, `ViT-B/16`, and `ViT-L/14`.
+- **Efficient Fine-Tuning:** Use LoRA to adapt large-scale models without modifying their core weights.
+- **Compatibility:** Supports CPU and GPU (CUDA) devices.
+- **Comprehensive Preprocessing Pipelines:**
+  - Text tokenization with fixed context length.
+  - Image resizing, cropping, and normalization.
 
-3. [LoRA in MultiheadAttention](#lora-in-multiheadattention)
+## Installation
 
-Please consider supporting our work:
-
-4. [Citation](#citation)
-
-If you have any inquiries:
-
-5. [Contact](#contact)
-   
-
-## Installation 
-
-### Environment configuration
-
-Our code requires an environment with PyTorch installed. If you don't have one, consider creating a Python environment with:
-```bash
-conda create -y --name CLIP-LoRA python=3.10.0
-conda activate CLIP-LoRA
-```
-And install Pytorch for instance with:
-```bash
-pip3 install torch==2.0.1 torchaudio==2.0.2 torchvision==0.15.2
-```
-
-### Datasets installation
-
-Please follow [DATASETS.md](DATASETS.md) to install the datasets.
-
-## How to execute CLIP-LoRA
-
-Execute CLIP-LoRA on the ImageNet dataset with a random seed of 1 by entering the following command:
+To run this repository, you will need Python installed. Clone the repository and install the required dependencies:
 
 ```bash
-python main.py --root_path /path/to/your/data --dataset imagenet --seed 1
+git clone https://github.com/EmmmaBot/CLIP-LoRA.git
+cd CLIP-LoRA
+pip install -r requirements.txt
 ```
 
-You can also exectute CLIP-LoRA on the 10 other datasets:
 
-```bash
-python main.py --root_path /path/to/your/data --dataset dataset_name --seed 1
-```
+## Paper
 
-You can optionally provide a save_path to save the LoRA modules, which can be reload easily with the --eval_only argument. The code will automatically check if your trained LoRA with the corresponding rank, alpha, encoder, params and position to ensure compatibility. The folder will be structured like that:
-```
-/your/save/path
-└── backbone
-    └── dataset
-        └── Xshots
-            ├── seedY
-```
+This implementation is based on the paper:
+**"Low-Rank Few-Shot Adaptation of Vision-Language Models" (CLIP-LoRA)**  
+*Presented at CVPRW 2024.*  
 
-Here is the command line:
-```bash
-python main.py --root_path /path/to/your/data --dataset dataset_name --seed 1 --save_path /your/save/path --eval_only 
-```
+If you use this repository in your work, consider citing the paper.
 
-## LoRA in MultiheadAttention
+## Acknowledgements
 
-The `PlainMultiheadAttentionLoRA` class in `loralib/layers.py` extends the standard PyTorch multi-head attention mechanism by incorporating Low-Rank Adaptation (LoRA). This class constructs explicit linear modules for each component of the attention mechanism—query (`q`), key (`k`), value (`v`), and output (`o`)—providing a structured and adaptable foundation for your experiments.
+The implementation is inspired by OpenAI's [CLIP](https://github.com/openai/CLIP) and related work in efficient model fine-tuning techniques. Special thanks to the authors of the CLIP-LoRA paper for motivating this project.
 
-### Class Overview
 
-`PlainMultiheadAttentionLoRA` takes an existing `nn.MultiheadAttention` module, replicates its configuration, and integrates LoRA linear modules.
+## Run the Script
 
-### Key Features
-
-- **Parameter Initialization:** The initialization process involves copying weights and biases from a pre-existing multi-head attention model. Each LoRA module (`q`, `k`, `v`, `o`) is adapted based on the specified requirements in the `enable_lora` list.
-- **LoRA Integration:** The replacement of standard linear layers with `LinearLoRA` layers introduces low-rank matrices, which are parameterized by the rank of adaptation (`r`) and the scaling factor (`lora_alpha`).
-- **Forward Pass:** The `forward_module` method manages the attention computation, incorporating optional dropout settings on the LoRA modules.
+The repository includes a main script `main.py` that allows users to perform various tasks by passing parameters. Make sure you have installed the required dependencies and have the necessary dataset/models available.
 
 ### Example Usage
 
-The following snippet demonstrates how to initialize the `PlainMultiheadAttentionLoRA` with an existing multi-head attention module.
+1. **Fine-Tuning a CLIP Model with LoRA:**
+   Specify the path to your dataset, the model to fine-tune, and other parameters:
 
-```python
-from loralib.layers import PlainMultiheadAttentionLoRA
+   ```bash
+   python main.py --task finetune --model ViT-B/32 --data ./path/to/dataset --output ./path/to/save/model
+   ```
 
-# Initialize with an existing MultiheadAttention module
-existing_mha = nn.MultiheadAttention(embed_dim=512, num_heads=8)
-lora_mha = PlainMultiheadAttentionLoRA(existing_mha, enable_lora=['q', 'k', 'v', 'o'], r=4, lora_alpha=2)
-```
+   Explanation:
+   - `--task finetune`: Indicates that the task is fine-tuning.
+   - `--model ViT-B/32`: Specifies the CLIP model to use.
+   - `--data ./path/to/dataset`: Path to the training dataset.
+   - `--output ./path/to/save/model`: Directory to save the output model.
 
-## Few-shot performance
+2. **Evaluate a Pre-Trained Model:**
+   Perform inference on a given dataset using a pre-trained model:
 
-<p align="center">
-  <img src="few_shot.png" alt="few_shot" width="750" height="500">
-  <br>
-  <em>Figure 2: Detailed few-shot learning results on the 10 fine-grained datasets and ImageNet with the ViT-B/16 visual backbone. Average performance for the ViT-B/16, ViT-B/32 and ViT-L/14 on the same 11 datasets is reported in the last three plots.</em>
-</p>
+   ```bash
+   python main.py --task evaluate --model ViT-B/32 --data ./path/to/eval/dataset --pretrained ./path/to/model.pt
+   ```
 
-## Citation
+   Explanation:
+   - `--task evaluate`: Specifies the evaluation task.
+   - `--pretrained ./path/to/model.pt`: Path to the pre-trained model file to evaluate.
 
-If you find this project useful, please cite it as follows:
+3. **Perform Inference:**
+   Run inference on specific image and text inputs:
 
-```bibtex
-@inproceedings{zanella2024low,
-  title={Low-Rank Few-Shot Adaptation of Vision-Language Models},
-  author={Zanella, Maxime and Ben Ayed, Ismail},
-  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition Workshops},
-  pages={1593--1603},
-  year={2024}
-}
-```
+   ```bash
+   python main.py --task inference --image ./path/to/image.jpg --text "A description of the image"
+   ```
 
-## Contact
+   Explanation:
+   - `--image ./path/to/image.jpg`: Path to the input image.
+   - `--text "A description of the image"`: Text description to compare with the image.
 
-For any inquiries, feel free to [create an issue](https://github.com/MaxZanella/CLIP-LoRA/issues) or contact us at [maxime.zanella@uclouvain.be](mailto:maxime.zanella@uclouvain.be).
+---
 
-## Acknowledgement
+### General Parameters:
 
-We express our gratitude to the [CoOp](https://github.com/KaiyangZhou/CoOp) and [Tip-Adapter](https://github.com/gaopengcuhk/Tip-Adapter) authors for their open-source contribution.
+| Parameter      | Description                                   | Default            |
+|----------------|-----------------------------------------------|--------------------|
+| `--task`       | The task to perform (`finetune`, `evaluate`, `inference`). | *required*         |
+| `--model`      | The CLIP model to use (`RN50`, `ViT-B/32`, etc.). | `ViT-B/32`         |
+| `--data`       | Path to the dataset for fine-tuning or evaluation. | None               |
+| `--output`     | Directory to save output models or logs.       | `./output/`        |
+| `--image`      | Path to the input image for inference.         | None               |
+| `--text`       | Text input for inference tasks.               | None               |
+| `--pretrained` | Path to a pre-trained model file.             | None               |
 
+### Notes:
+
+- Ensure that your dataset is prepared and formatted correctly for the respective tasks.
+- Fine-tuning may require access to a GPU for optimal performance.
+- For more help, run:
+  ```bash
+  python main.py --help
+  ```
+
+---
+
+**Updates will be added as the repository evolves. Feel free to submit an issue or pull request if you encounter any problems or have feature suggestions!**
 
